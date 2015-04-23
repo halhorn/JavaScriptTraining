@@ -135,23 +135,18 @@ describe('ステージ5（意図通りに非同期処理を利用できる）', 
 	    var flatten = function(array){
 		return $.map(array, function(arrayOrElement){ return arrayOrElement; });
 	    };
+	    var isUnknownFriend = function(name) {
+		return $.inArray(name, allFriends) === -1;
+	    };
 
 	    var iterFunc = function(newFriends){
-		console.log(newFriends);
 		if (!newFriends.length) {
 		    return Promise.resolve(allFriends);
 		}
 		return Promise.all($.map(newFriends, getFriends))
-		    .then(flatten)
-		    .then(function(friends){
-			var nextNewFriends = [];
-			for (var i = 0; i < friends.length; i++) {
-			    var friend = friends[i];
-			    if (!$.contains(allFriends, friend)) {
-				nextNewFriends.push(friend);
-				allFriends.push(friend);
-			    }
-			}
+		    .then(function(friendsDeepArray){
+			var nextNewFriends = flatten(friendsDeepArray).filter(isUnknownFriend);
+			allFriends = allFriends.concat(nextNewFriends);
 			return nextNewFriends;
 		    }).then(iterFunc);
 	    };
