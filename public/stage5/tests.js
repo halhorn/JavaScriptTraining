@@ -125,43 +125,40 @@ describe('ステージ5（意図通りに非同期処理を利用できる）', 
 	// 作成した promise を promisedFriends 変数に代入してください。
 	var api = '/api/friends/';
 	var username = "CoffeeScript";
-	var getFriends = function(friendName){
-	    return fetch(api + friendName)
-		.then(function(res){ return res.json(); });
-	};
-	var flatten = function(array){
-	    return $.map(array, function(arrayOrElement){ return arrayOrElement; });
-	};
+	var getFriendsRecursively = function(firstUserName) {
+	    var allFriends = [];
+	    
+	    var getFriends = function(friendName){
+		return fetch(api + friendName)
+		    .then(function(res){ return res.json(); });
+	    };
+	    var flatten = function(array){
+		return $.map(array, function(arrayOrElement){ return arrayOrElement; });
+	    };
 
-	var getFriendsRecursively = function(value){
-	    if (!value.newFriends.length) {
-		return Promise.resolve(value);
-	    }
-	    return Promise.all($.map(value.newFriends, getFriends))
-		.then(flatten)
-		.then(function(friends){
-		    var newFriends = [];
-		    var allFriends = value.allFriends;
-		    for (var i = 0; i < friends.length; i++) {
-			var friend = friends[i];
-			if (!$.contains(allFriends, friend)) {
-			    newFriends.push(friend);
-			    allFriends.push(friend);
+	    var iterFunc = function(newFriends){
+		console.log(newFriends);
+		if (!newFriends.length) {
+		    return Promise.resolve(allFriends);
+		}
+		return Promise.all($.map(newFriends, getFriends))
+		    .then(flatten)
+		    .then(function(friends){
+			var nextNewFriends = [];
+			for (var i = 0; i < friends.length; i++) {
+			    var friend = friends[i];
+			    if (!$.contains(allFriends, friend)) {
+				nextNewFriends.push(friend);
+				allFriends.push(friend);
+			    }
 			}
-		    }
-		    return {
-			newFriends: newFriends,
-			allFriends: allFriends
-		    };
-		}).then(getFriendsRecursively);
+			return nextNewFriends;
+		    }).then(iterFunc);
+	    };
+	    return iterFunc([firstUserName]);
 	};
 
-	var promisedFriends = getFriendsRecursively({
-	    newFriends: [username],
-	    allFriends: []
-	}).then(function(value){
-	    return value.allFriends;
-	});
+	var promisedFriends = getFriendsRecursively(username);
 
       return expect(promisedFriends).to.eventually.have.length(5)
         .and.have.members([
