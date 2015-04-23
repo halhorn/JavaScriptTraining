@@ -93,7 +93,6 @@ describe('ステージ5（意図通りに非同期処理を利用できる）', 
         .and.have.members(['jisp', 'TeJaS']);
     });
 
-
     it('/api/friends API を使って Shen の友人の友人を取得できる', function() {
       var api = '/api/friends/';
       var username = 'Shen';
@@ -117,10 +116,13 @@ describe('ステージ5（意図通りに非同期処理を利用できる）', 
         .and.have.members(['TypeScript']);
     });
 
-
     it('/api/friends API を使って CoffeeScript の友人を再帰的に取得できる', function() {
       // 難易度高いので、自信のある人だけ挑戦してください。
-      // it.skip の .skip を消せば、テストが走るようになります。
+	// it.skip の .skip を消せば、テストが走るようになります。
+
+	// 1. ユーザー名リストから、全員分の友人を取る
+	// 2. まだ名前を知らない友人のみ新たな友人として追加する
+	// 3. 新たな友人を1にかける
 
 	// 作成した promise を promisedFriends 変数に代入してください。
 	var api = '/api/friends/';
@@ -141,7 +143,7 @@ describe('ステージ5（意図通りに非同期処理を利用できる）', 
 
 	    var iterFunc = function(newFriends){
 		if (!newFriends.length) {
-		    return Promise.resolve(allFriends);
+		    return allFriends;
 		}
 		return Promise.all($.map(newFriends, getFriends))
 		    .then(function(friendsDeepArray){
